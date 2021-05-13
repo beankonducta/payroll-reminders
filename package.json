@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "dayjs": "^1.10.4",
+    "dotenv": "^9.0.2",
     "twilio": "^3.62.0"
   }
 }
