@@ -1,11 +1,25 @@
 var dotenv = require('dotenv').config()
 
-var dayjs = require('dayjs')
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone')
+// Server stuff
+const express = require('express');
+bodyParser = require('body-parser');
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
+
+// Init express
+app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+
+// dayjs stuff
+const dayjs = require('dayjs')
+const utc = require('dayjs/plugin/utc')
+const timezone = require('dayjs/plugin/timezone')
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Twilio stuff
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
@@ -24,11 +38,35 @@ const paydays = [1, 16];
 const debug = true;
 
 // Flag to disable notifications
-let payrollSubmitted = false;
+let disableNotifications = false;
 
+// Server
+var server = app.listen(4567, function () {
+    console.log('Listening on port %d', server.address().port);
+});
+
+// Handle responses
+app.post('/message', function (req, res) {
+    let resp = new MessagingResponse();
+    if (req.body.Body.toLowerCase().includes('done')) {
+        disableNotifications = true;
+        console.log(req.body.Body);
+        resp.message('Thanks for completing payroll :)');
+        res.writeHead(200, {
+            'Content-Type': 'text/xml'
+        });
+        res.end(resp.toString());
+    }
+});
+
+// The job that checks once an hour if it should send a text
 setInterval(() => {
     const date = dayjs();
-    if (date.hour() % 2 === 0 && date.hour() > 9 && date.hour() < 16 && !payrollSubmitted) {
+
+    // Resets notifications
+    if(date.hour > 16) disableNotifications = false;
+    
+    if (date.hour() % 2 === 0 && date.hour() > 9 && date.hour() < 16 && !disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
                 .create({
@@ -48,9 +86,11 @@ setInterval(() => {
                 .then(message => console.log(`Tipout reminder sent to ${sendToNum}`));
         }
     }
-}, 3600000); // once per hour
+}, 10000); // Once per hour
 
 let isMonday = (date) => {
+
+    // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
     return date.day() === 1;
 }
 
@@ -68,13 +108,16 @@ let isPayrollDay = (date) => {
     if (debug)
         console.log(payDay.date())
 
+    // Payroll takes two business days (one to submit, one to receive)
     while (validBusinessDays < 2) {
         if (isHoliday(payDay) || isWeekend(payDay)) {
             // do nothing
         }
         else {
-            // Valid business day found, increase count.
+            // Valid business day found, increase count
             validBusinessDays += 1;
+
+            // Break the loop
             if (validBusinessDays == 2) break;
         }
 
@@ -85,6 +128,7 @@ let isPayrollDay = (date) => {
             console.log(validBusinessDays + ':' + payDay.date())
     }
 
+    // Returns whether the calculated pay date is equal to today's date
     return payDay.date() === date.date();
 
 }
