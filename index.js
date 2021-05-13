@@ -10,44 +10,49 @@ dayjs.tz.setDefault("America/Denver");
 // Days to run payroll
 const paydays = [1, 16];
 
+// Debug flag
+const debug = true;
+
 setInterval(() => {
     console.log(isPayrollDay(dayjs()))
-}, 5000);
+}, 500);
 
 let isMonday = (date) => {
     return date.day() === 1;
 }
 
-// untested in a lot of cases, needs refactor. maybe we just count backwards until we have two valid business days between pay date?
 let isPayrollDay = (date) => {
 
-    // Numerical day of the month
-    const dayOfMonth = date.date();
-
-    // new current date object
+    // New current date object
     let payDay = dayjs();
 
-    // flag incase payroll needs to deposit on a holiday
-    let payOnHoliday = false;
+    // Count for number of valid business days found
+    let validBusinessDays = 0;
 
-    // set payday to nearest future payday
-    payDay = payDay.date(dayOfMonth > paydays[1] ? paydays[0] : paydays[1]);
+    // Set payday to nearest future payday
+    payDay = payDay.date(date.date() > paydays[1] ? paydays[0] : paydays[1]);
 
-    // flag if the pay date is a holiday
-    if (isHoliday(date)) payOnHoliday = true;
+    if (debug)
+        console.log(payDay.date())
 
-    // subtract two days if payday falls on a holiday, one if it doesn't
-    payDay = payDay.date(isHoliday(date) ? payDay.date() - 2 : payDay.date() - 1);
+    while (validBusinessDays < 2) {
+        if (isHoliday(payDay) || isWeekend(payDay)) {
+            // do nothing
+        }
+        else {
+            // Valid business day found, increase count.
+            validBusinessDays += 1;
+            if (validBusinessDays == 2) break;
+        }
 
-    // subtract one day while payday falls on a weekend (including fridays, we need a day for payroll to process)
-    while (isWeekend(payDay))
+        // Subtract a day from payday calculation
         payDay = payDay.date(payDay.date() - 1);
 
-    // check to make sure we're not on a holiday now. subtract one day while we are
-    while (isHoliday(payDay))
-        payDay = payDay.date(payDay.date() - 1);
+        if (debug)
+            console.log(validBusinessDays + ':' + payDay.date())
+    }
 
-    return payDay.date() === dayOfMonth;
+    return payDay.date() === date.date();
 
 }
 
@@ -57,5 +62,5 @@ let isHoliday = (date) => {
 }
 
 let isWeekend = (date) => {
-    return date.day() >= 5 || date.day() === 0;
+    return date.day() === 6 || date.day() === 0;
 }
