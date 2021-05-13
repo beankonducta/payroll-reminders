@@ -2,7 +2,7 @@ var dotenv = require('dotenv').config()
 
 // Server stuff
 const express = require('express');
-bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 // Init express
@@ -65,7 +65,7 @@ setInterval(() => {
 
     // Resets notifications
     if(date.hour > 16) disableNotifications = false;
-    
+
     if (date.hour() % 2 === 0 && date.hour() > 9 && date.hour() < 16 && !disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
