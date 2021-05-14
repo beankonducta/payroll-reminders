@@ -19,6 +19,10 @@ const timezone = require('dayjs/plugin/timezone')
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Date-holidays stuff
+const Holidays = require('date-holidays')
+const hd = new Holidays("US", "ut")
+
 // Twilio stuff
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -50,8 +54,15 @@ app.post('/message', function (req, res) {
     let resp = new MessagingResponse();
     if (req.body.Body.toLowerCase().includes('done')) {
         disableNotifications = true;
-        console.log(req.body.Body);
         resp.message('Thanks for completing payroll :)');
+        res.writeHead(200, {
+            'Content-Type': 'text/xml'
+        });
+        res.end(resp.toString());
+    }
+    if (req.body.Body.toLowerCase().includes('ping')) {
+        disableNotifications = true;
+        resp.message(`I'm still alive! Notifications are currently ${disableNotifications ? 'disabled.' : 'enabled.'} Today is ${isPayrollDay(dayjs()) ? '' : 'not'} payroll day. Today is ${isMonday(dayjs()) ? '' : 'not'} monday & today is ${isHoliday(dayjs()) ? '' : 'not'} a holiday.`);
         res.writeHead(200, {
             'Content-Type': 'text/xml'
         });
@@ -62,7 +73,7 @@ app.post('/message', function (req, res) {
 // The job that checks once an hour if it should send a text
 setInterval(() => {
     const date = dayjs();
-
+    isHoliday(date);
     // Resets notifications
     if(date.hour > 16) disableNotifications = false;
 
@@ -86,7 +97,7 @@ setInterval(() => {
                 .then(message => console.log(`Tipout reminder sent to ${sendToNum}`));
         }
     }
-}, 10000); // Once per hour
+}, 3600000); // Once per hour
 
 let isMonday = (date) => {
 
@@ -134,7 +145,11 @@ let isPayrollDay = (date) => {
 }
 
 let isHoliday = (date) => {
-    // TODO: Figure out how to list holidays
+    hd.getHolidays(date.year()).forEach(val => {
+
+        // Slice just the date part (omit time)
+        if(val.date.slice(0, 10) === date.format().slice(0, 10)) return true;
+    })
     return false;
 }
 
