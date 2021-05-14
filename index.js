@@ -75,7 +75,7 @@ setInterval(() => {
     const date = dayjs();
     isHoliday(date);
     // Resets notifications
-    if(date.hour > 16) disableNotifications = false;
+    if (date.hour > 16) disableNotifications = false;
 
     if (date.hour() % 2 === 0 && date.hour() > 9 && date.hour() < 16 && !disableNotifications) {
         if (isPayrollDay(date)) {
@@ -99,13 +99,12 @@ setInterval(() => {
     }
 }, 3600000); // Once per hour
 
-let isMonday = (date) => {
-
+const isMonday = (date) => {
     // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
     return date.day() === 1;
 }
 
-let isPayrollDay = (date) => {
+const isPayrollDay = (date) => {
 
     // New current date object
     let payDay = dayjs();
@@ -144,15 +143,18 @@ let isPayrollDay = (date) => {
 
 }
 
-let isHoliday = (date) => {
-    hd.getHolidays(date.year()).forEach(val => {
-
-        // Slice just the date part (omit time)
-        if(val.date.slice(0, 10) === date.format().slice(0, 10)) return true;
-    })
+const isHoliday = (date) => {
+    for (holiday of hd.getHolidays(date.year()))
+        if (holiday.date.slice(0, 10) == date.format().slice(0, 10)) return true;
     return false;
 }
 
-let isWeekend = (date) => {
+const isWeekend = (date) => {
     return date.day() === 6 || date.day() === 0;
 }
+
+// exports for testing
+exports.isHoliday = isHoliday;
+exports.isWeekend = isWeekend;
+exports.isMonday = isMonday;
+exports.isPayrollDay = isPayrollDay;
