@@ -72,8 +72,10 @@ app.post('/message', function (req, res) {
     }
 });
 
-app.get('/', function (req, res) {
+// The job that checks once an hour if it should send a text
+setInterval(() => {
     const date = dayjs();
+
     // Resets notifications
     if (date.hour > 16) disableNotifications = false;
 
@@ -97,7 +99,7 @@ app.get('/', function (req, res) {
                 .then(message => console.log(`Tipout reminder sent to ${sendToNum}`));
         }
     }
-});
+}, 3600000); // Once per hour
 
 const isMonday = (date) => {
     // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
@@ -114,9 +116,9 @@ const isPayrollDay = (date) => {
 
     // Set payday to nearest future payday
     payDay = payDay.date(date.date() > paydays[1] ? paydays[0] : paydays[1]);
-
+    
     // If it's the beginning payday of the month we need to increase month by 1
-    if (payDay.date() === paydays[0]) payDay = payDay.month(payDay.month() + 1);
+    if(payDay.date() === paydays[0]) payDay = payDay.month(payDay.month() + 1);
 
     if (debug)
         console.log(payDay.date())
@@ -125,7 +127,7 @@ const isPayrollDay = (date) => {
     while (validBusinessDays < 2) {
         if (isHoliday(payDay) || isWeekend(payDay)) {
             if (debug)
-                console.log('invalid day: ' + payDay.format())
+                console.log('invalid day: '+payDay.format())
         } else {
             // Valid business day found, increase count
             validBusinessDays += 1;
