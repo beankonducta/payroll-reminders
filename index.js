@@ -44,8 +44,10 @@ const debug = false;
 // Flag to disable notifications
 let disableNotifications = false;
 
+const port = process.env.PORT || 80;
+
 // Server
-var server = app.listen(4567, function () {
+var server = app.listen(port, function () {
     console.log('Listening on port %d', server.address().port);
 });
 
