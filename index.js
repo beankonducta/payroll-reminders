@@ -39,7 +39,7 @@ dayjs.tz.setDefault("America/Denver");
 const paydays = [1, 16];
 
 // Debug flag
-const debug = true;
+const debug = false;
 
 // Flag to disable notifications
 let disableNotifications = false;
@@ -107,13 +107,16 @@ const isMonday = (date) => {
 const isPayrollDay = (date) => {
 
     // New current date object
-    let payDay = dayjs();
+    let payDay = date.clone();
 
     // Count for number of valid business days found
     let validBusinessDays = 0;
 
     // Set payday to nearest future payday
     payDay = payDay.date(date.date() > paydays[1] ? paydays[0] : paydays[1]);
+    
+    // If it's the beginning payday of the month we need to increase month by 1
+    if(payDay.date() === paydays[0]) payDay = payDay.month(payDay.month() + 1);
 
     if (debug)
         console.log(payDay.date())
@@ -121,14 +124,17 @@ const isPayrollDay = (date) => {
     // Payroll takes two business days (one to submit, one to receive)
     while (validBusinessDays < 2) {
         if (isHoliday(payDay) || isWeekend(payDay)) {
-            // do nothing
-        }
-        else {
+            if (debug)
+                console.log('invalid day: '+payDay.format())
+        } else {
             // Valid business day found, increase count
             validBusinessDays += 1;
 
+            if (debug)
+                console.log('valid day: ' + payDay.format())
+
             // Break the loop
-            if (validBusinessDays == 2) break;
+            if (validBusinessDays === 2) break;
         }
 
         // Subtract a day from payday calculation
