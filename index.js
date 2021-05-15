@@ -54,7 +54,7 @@ var server = app.listen(port, function () {
 // Handle responses
 app.post('/message', function (req, res) {
     let resp = new MessagingResponse();
-    if (req.body.Body.toLowerCase().includes('done')) {
+    if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
         disableNotifications = true;
         resp.message('Thanks for completing payroll :)');
         res.writeHead(200, {
