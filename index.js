@@ -82,11 +82,11 @@ setInterval(() => {
 }, 36000); // Once per hour
 
 const runNotification = () => {
-    console.log('attempting run');
     const date = dayjs();
+    console.log(date.hour());
 
     // Resets notifications
-    if (+date.hour > 16) disableNotifications = false;
+    if (+date.hour() > 16) disableNotifications = false;
 
     if (+date.hour() > 9 && +date.hour() < 16 && !disableNotifications) {
         console.log('running');
