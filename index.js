@@ -49,13 +49,18 @@ const port = process.env.PORT || 80;
 // Server
 var server = app.listen(port, function () {
     console.log('Listening on port %d', server.address().port);
+    
+    // Startup run
+    runNotification();
 });
 
 // Handle responses
 app.post('/message', function (req, res) {
+    console.log(req);
     let resp = new MessagingResponse();
     if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
         disableNotifications = true;
+        console.log('disabling notifications');
         resp.message('Thanks for completing payroll :)');
         res.writeHead(200, {
             'Content-Type': 'text/xml'
@@ -63,7 +68,6 @@ app.post('/message', function (req, res) {
         res.end(resp.toString());
     }
     if (req.body.Body.toLowerCase().includes('ping')) {
-        disableNotifications = true;
         resp.message(`I'm still alive! Notifications are currently ${disableNotifications ? 'disabled.' : 'enabled.'} Today is ${isPayrollDay(dayjs()) ? '' : 'not'} payroll day. Today is ${isMonday(dayjs()) ? '' : 'not'} monday & today is ${isHoliday(dayjs()) ? '' : 'not'} a holiday.`);
         res.writeHead(200, {
             'Content-Type': 'text/xml'
@@ -74,6 +78,10 @@ app.post('/message', function (req, res) {
 
 // The job that checks once an hour if it should send a text
 setInterval(() => {
+    runNotification();
+}, 36000); // Once per hour
+
+const runNotification = () => {
     const date = dayjs();
 
     // Resets notifications
@@ -99,7 +107,7 @@ setInterval(() => {
                 .then(message => console.log(`Tipout reminder sent to ${sendToNum}`));
         }
     }
-}, 3600000); // Once per hour
+}
 
 const isMonday = (date) => {
     // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
@@ -116,9 +124,9 @@ const isPayrollDay = (date) => {
 
     // Set payday to nearest future payday
     payDay = payDay.date(date.date() > paydays[1] ? paydays[0] : paydays[1]);
-    
+
     // If it's the beginning payday of the month we need to increase month by 1
-    if(payDay.date() === paydays[0]) payDay = payDay.month(payDay.month() + 1);
+    if (payDay.date() === paydays[0]) payDay = payDay.month(payDay.month() + 1);
 
     if (debug)
         console.log(payDay.date())
@@ -127,7 +135,7 @@ const isPayrollDay = (date) => {
     while (validBusinessDays < 2) {
         if (isHoliday(payDay) || isWeekend(payDay)) {
             if (debug)
-                console.log('invalid day: '+payDay.format())
+                console.log('invalid day: ' + payDay.format())
         } else {
             // Valid business day found, increase count
             validBusinessDays += 1;
