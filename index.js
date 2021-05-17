@@ -49,7 +49,7 @@ const port = process.env.PORT || 80;
 // Server
 var server = app.listen(port, function () {
     console.log('Listening on port %d', server.address().port);
-    
+
     // Startup run
     runNotification();
 });
@@ -79,10 +79,13 @@ app.post('/message', function (req, res) {
 // The job that checks once an hour if it should send a text
 setInterval(() => {
     runNotification();
-}, 36000); // Once per hour
+}, 3600000); // Once per hour
 
 const runNotification = () => {
     const date = dayjs();
+    
+    if (debug)
+        console.log(date);
 
     // I don't know if this is reliable, don't know if the Heroku server changes
     const herokuOffset = 5;
@@ -91,7 +94,6 @@ const runNotification = () => {
     if (+date.hour() > 16 + herokuOffset) disableNotifications = false;
 
     if (+date.hour() > 9 + herokuOffset && !disableNotifications) {
-        console.log('running');
         if (isPayrollDay(date)) {
             client.messages
                 .create({
