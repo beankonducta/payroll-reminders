@@ -56,7 +56,7 @@ var server = app.listen(port, function () {
 
 // Handle responses
 app.post('/message', function (req, res) {
-    console.log(req);
+    console.log(req.body.Body);
     let resp = new MessagingResponse();
     if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
         disableNotifications = true;
