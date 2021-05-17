@@ -86,9 +86,9 @@ const runNotification = () => {
     const date = dayjs();
 
     // Resets notifications
-    if (date.hour > 16) disableNotifications = false;
+    if (+date.hour > 16) disableNotifications = false;
 
-    if (date.hour() > 9 && date.hour() < 16 && !disableNotifications) {
+    if (+date.hour() > 9 && +date.hour() < 16 && !disableNotifications) {
         console.log('running');
         if (isPayrollDay(date)) {
             client.messages
