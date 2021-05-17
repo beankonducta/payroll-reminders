@@ -83,12 +83,14 @@ setInterval(() => {
 
 const runNotification = () => {
     const date = dayjs();
-    console.log(date.hour());
+
+    // I don't know if this is reliable, don't know if the Heroku server changes
+    const herokuOffset = 5;
 
     // Resets notifications
-    if (+date.hour() > 16) disableNotifications = false;
+    if (+date.hour() > 16 + herokuOffset) disableNotifications = false;
 
-    if (+date.hour() > 9 && +date.hour() < 16 && !disableNotifications) {
+    if (+date.hour() > 9 + herokuOffset && !disableNotifications) {
         console.log('running');
         if (isPayrollDay(date)) {
             client.messages
