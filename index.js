@@ -87,7 +87,7 @@ const runNotification = () => {
     // Resets notifications
     if (date.hour > 16) disableNotifications = false;
 
-    if (date.hour() % 2 === 0 && date.hour() > 9 && date.hour() < 16 && !disableNotifications) {
+    if (date.hour() % 1 === 0 && date.hour() > 9 && date.hour() < 16 && !disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
                 .create({
