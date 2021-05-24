@@ -39,7 +39,7 @@ dayjs.tz.setDefault("America/Denver");
 const paydays = [1, 16];
 
 // Debug flag
-const debug = false;
+const debug = true;
 
 // Flag to disable notifications
 let disableNotifications = false;
@@ -74,6 +74,9 @@ app.post('/message', function (req, res) {
         });
         res.end(resp.toString());
     }
+    if (req.body.Body.toLowerCase().includes('test')) {
+        runNotification();
+    }
 });
 
 // The job that checks once an hour if it should send a text
@@ -83,17 +86,23 @@ setInterval(() => {
 
 const runNotification = () => {
     const date = dayjs();
-    
-    if (debug)
+
+    if (debug) {
         console.log(date);
+        console.log(`hour: ${+date.hour()}`);
+        console.log(`monday?: ${isMonday(date)}`);
+        console.log(`payroll?: ${isPayrollDay(date)}`);
+        console.log(`holiday?: ${isHoliday(date)}`);
+    }
 
     // I don't know if this is reliable, don't know if the Heroku server changes
-    const herokuOffset = 5;
+    // it does appear that the timezone offsets aren't being calculated correctly here
+    const herokuOffset = 0;
 
     // Resets notifications
     if (+date.hour() > 16 + herokuOffset) disableNotifications = false;
 
-    if (+date.hour() > 9 + herokuOffset && !disableNotifications) {
+    if (+date.hour() > 8 + herokuOffset && !disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
                 .create({
