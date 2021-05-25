@@ -1,4 +1,4 @@
-var dotenv = require('dotenv').config()
+var dotenv = require('dotenv').config();
 
 // Server stuff
 const express = require('express');
@@ -16,20 +16,25 @@ app.use(bodyParser.urlencoded({
 }));
 
 // dayjs stuff
-const dayjs = require('dayjs')
-const utc = require('dayjs/plugin/utc')
-const timezone = require('dayjs/plugin/timezone')
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 // Date-holidays stuff
 const Holidays = require('date-holidays');
-const hd = new Holidays("US", "ut")
+const hd = new Holidays("US", "ut");
 
 // Twilio stuff
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require('twilio')(accountSid, authToken);
+
+// Firebase stuff
+const admin = require('firebase-admin');
+admin.initializeApp(functions.config().firebase);
+const db = admin.firestore();
 
 // Numbers to send to
 const sendToNum = process.env.TWILIO_SEND_TO;
@@ -52,6 +57,11 @@ const port = process.env.PORT || 80;
 // Server
 var server = app.listen(port => {
     console.log('Listening on port %d', server.address().port);
+    db.collection('state').doc('state').get().then(val => {
+        if (debug && val)
+            console.log(val.data());
+        disableNotifications = val.data().disableNotifications;
+    }).catch(err => console.log(err));
 });
 
 // Handle responses
@@ -59,6 +69,10 @@ app.post('/message', (req, res) => {
     let resp = new MessagingResponse();
     if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
         disableNotifications = true;
+        db.collection('state').doc('state').set(disableNotifications, { merge: true }).then(val => {
+            if (debug && val)
+                console.log(val);
+        }).catch(err => console.log(err));
         console.log('disabling notifications');
         resp.message('Thanks for completing payroll :)');
         res.writeHead(200, {
@@ -73,18 +87,26 @@ app.post('/message', (req, res) => {
         });
         res.end(resp.toString());
     }
-    if (req.body.Body.toLowerCase().includes('test')) {
+    if (req.body.Body.toLowerCase().includes('test notification')) {
         runNotification();
+    }
+
+    if (req.body.Body.toLowerCase().includes('reset notification')) {
+        disableNotifications = true;
+        db.collection('state').doc('state').set(disableNotifications, { merge: true }).then(val => {
+            if (debug && val)
+                console.log(val);
+        }).catch(err => console.log(err));
     }
 });
 
 // For our cron job
 app.post('/run', (req, res) => {
     runNotification();
-        res.writeHead(200, {
-            'Content-Type': 'text/xml'
-        });
-        res.end("Running");
+    res.writeHead(200, {
+        'Content-Type': 'text/xml'
+    });
+    res.end("Running");
 })
 
 const runNotification = () => {
@@ -103,9 +125,15 @@ const runNotification = () => {
     const herokuOffset = 0;
 
     // Resets notifications
-    if (Number(date.hour()) > 16 + herokuOffset) disableNotifications = false;
+    if (Number(date.hour()) > 23) {
+        disableNotifications = true;
+        db.collection('state').doc('state').set(disableNotifications, { merge: true }).then(val => {
+            if (debug && val)
+                console.log(val);
+        }).catch(err => console.log(err));
+    }
 
-    if (Number(date.hour()) > 8 + herokuOffset && !disableNotifications) {
+    if (!disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
                 .create({
