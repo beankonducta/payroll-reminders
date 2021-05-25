@@ -68,11 +68,7 @@ var server = app.listen(port => {
 app.post('/message', (req, res) => {
     let resp = new MessagingResponse();
     if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
-        disableNotifications = true;
-        db.collection('state').doc('state').set(disableNotifications, { merge: true }).then(val => {
-            if (debug && val)
-                console.log(val);
-        }).catch(err => console.log(err));
+        disableNotify();
         console.log('disabling notifications');
         resp.message('Thanks for completing payroll :)');
         res.writeHead(200, {
@@ -92,11 +88,7 @@ app.post('/message', (req, res) => {
     }
 
     if (req.body.Body.toLowerCase().includes('reset notification')) {
-        disableNotifications = true;
-        db.collection('state').doc('state').set(disableNotifications, { merge: true }).then(val => {
-            if (debug && val)
-                console.log(val);
-        }).catch(err => console.log(err));
+        disableNotify();
     }
 });
 
@@ -108,6 +100,14 @@ app.post('/run', (req, res) => {
     });
     res.end("Running");
 })
+
+const disableNotify = () => {
+    disableNotifications = true;
+    db.collection('state').doc('state').set({ disableNotifications }).then(val => {
+        if (debug && val)
+            console.log(val);
+    }).catch(err => console.log(err));
+}
 
 const runNotification = () => {
     const date = dayjs();
@@ -126,11 +126,7 @@ const runNotification = () => {
 
     // Resets notifications
     if (Number(date.hour()) > 23) {
-        disableNotifications = true;
-        db.collection('state').doc('state').set(disableNotifications, { merge: true }).then(val => {
-            if (debug && val)
-                console.log(val);
-        }).catch(err => console.log(err));
+        disableNotify();
     }
 
     if (!disableNotifications) {
