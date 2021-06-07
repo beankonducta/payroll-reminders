@@ -57,48 +57,64 @@ const port = process.env.PORT || 80;
 // Server
 var server = app.listen(port => {
     console.log('Listening on port %d', server.address().port);
-    db.collection('state').doc('state').get().then(val => {
-        if (debug && val)
-            console.log(val.data());
-        disableNotifications = val.data().disableNotifications;
-    }).catch(err => console.log(err));
 });
 
 // Handle responses
 app.post('/message', (req, res) => {
     let resp = new MessagingResponse();
-    if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
-        disableNotify();
-        console.log('disabling notifications');
-        resp.message('Thanks for completing payroll :)');
-        res.writeHead(200, {
-            'Content-Type': 'text/xml'
-        });
-        res.end(resp.toString());
-    }
-    if (req.body.Body.toLowerCase().includes('ping')) {
-        resp.message(`I'm still alive! Notifications are currently ${disableNotifications ? 'disabled.' : 'enabled.'} Today is ${isPayrollDay(dayjs()) ? '' : 'not'} payroll day. Today is ${isMonday(dayjs()) ? '' : 'not'} monday & today is ${isHoliday(dayjs()) ? '' : 'not'} a holiday.`);
-        res.writeHead(200, {
-            'Content-Type': 'text/xml'
-        });
-        res.end(resp.toString());
-    }
-    if (req.body.Body.toLowerCase().includes('test notification')) {
+    db.collection('state').doc('state').get().then(val => {
+        if (debug && val)
+            console.log(val.data());
+        disableNotifications = val.data().disableNotifications;
+        if (req.body.Body.toLowerCase().includes('done') && !disableNotifications) {
+            disableNotify();
+            console.log('disabling notifications');
+            resp.message('Thanks for completing payroll :)');
+            res.writeHead(200, {
+                'Content-Type': 'text/xml'
+            });
+            res.end(resp.toString());
+        }
+        if (req.body.Body.toLowerCase().includes('ping')) {
+            resp.message(`I'm still alive! Notifications are currently ${disableNotifications ? 'disabled.' : 'enabled.'} Today is ${isPayrollDay(dayjs()) ? '' : 'not'} payroll day. Today is ${isMonday(dayjs()) ? '' : 'not'} monday & today is ${isHoliday(dayjs()) ? '' : 'not'} a holiday.`);
+            res.writeHead(200, {
+                'Content-Type': 'text/xml'
+            });
+            res.end(resp.toString());
+        }
+        if (req.body.Body.toLowerCase().includes('test notification')) {
+            runNotification();
+        }
+        if (req.body.Body.toLowerCase().includes('reset notification')) {
+            disableNotify();
+        }
         runNotification();
-    }
-
-    if (req.body.Body.toLowerCase().includes('reset notification')) {
-        disableNotify();
-    }
+        res.end("Running");
+        if (debug)
+            console.log('disable: ' + disableNotifications);
+    }).catch(err => {
+        console.log(err);
+        res.end("Error");
+    });
 });
 
 // For our cron job
-app.post('/run', (req, res) => {
-    runNotification();
+app.get('/run', (req, res) => {
     res.writeHead(200, {
         'Content-Type': 'text/xml'
     });
-    res.end("Running");
+    db.collection('state').doc('state').get().then(val => {
+        if (debug && val)
+            console.log(val.data());
+        disableNotifications = val.data().disableNotifications;
+        runNotification();
+        res.end("Running");
+        if (debug)
+            console.log('disable: ' + disableNotifications);
+    }).catch(err => {
+        console.log(err);
+        res.end("Error");
+    });
 })
 
 const disableNotify = () => {
