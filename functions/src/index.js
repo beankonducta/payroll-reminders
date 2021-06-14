@@ -85,8 +85,11 @@ app.post('/message', (req, res) => {
         if (req.body.Body.toLowerCase().includes('test notification')) {
             runNotification();
         }
-        if (req.body.Body.toLowerCase().includes('reset notification')) {
+        if (req.body.Body.toLowerCase().includes('disable notification')) {
             disableNotify();
+        }
+        if (req.body.Body.toLowerCase().includes('enable notification')) {
+            enableNotify();
         }
         runNotification();
         res.end("Running");
@@ -125,6 +128,14 @@ const disableNotify = () => {
     }).catch(err => console.log(err));
 }
 
+const enableNotify = () => {
+    disableNotifications = false;
+    db.collection('state').doc('state').set({ disableNotifications }).then(val => {
+        if (debug && val)
+            console.log(val);
+    }).catch(err => console.log(err));
+}
+
 const runNotification = () => {
     const date = dayjs();
 
@@ -136,15 +147,11 @@ const runNotification = () => {
         console.log(`holiday?: ${isHoliday(date)}`);
     }
 
-    // I don't know if this is reliable, don't know if the Heroku server changes
-    // it does appear that the timezone offsets aren't being calculated correctly here
-    const herokuOffset = 0;
-
     // Resets notifications
     if (Number(date.hour()) > 23) {
-        disableNotify();
+        enableNotify();
     }
-
+    setDay(date.day());
     if (!disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
