@@ -151,7 +151,6 @@ const runNotification = () => {
     if (Number(date.hour()) > 23) {
         enableNotify();
     }
-    setDay(date.day());
     if (!disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
