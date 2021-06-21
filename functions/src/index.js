@@ -120,9 +120,17 @@ app.get('/run', (req, res) => {
     });
 })
 
+app.get('/reset', (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/xml'
+    });
+    enableNotify();
+    res.end("Reset Complete");
+});
+
 const disableNotify = () => {
     disableNotifications = true;
-    db.collection('state').doc('state').set({ disableNotifications }).then(val => {
+    db.collection('state').doc('state').set({ disableNotifications: false }).then(val => {
         if (debug && val)
             console.log(val);
     }).catch(err => console.log(err));
@@ -130,7 +138,7 @@ const disableNotify = () => {
 
 const enableNotify = () => {
     disableNotifications = false;
-    db.collection('state').doc('state').set({ disableNotifications }).then(val => {
+    db.collection('state').doc('state').set({ disableNotifications: true }).then(val => {
         if (debug && val)
             console.log(val);
     }).catch(err => console.log(err));
@@ -147,10 +155,6 @@ const runNotification = () => {
         console.log(`holiday?: ${isHoliday(date)}`);
     }
 
-    // Resets notifications
-    if (Number(date.hour()) > 23) {
-        enableNotify();
-    }
     if (!disableNotifications) {
         if (isPayrollDay(date)) {
             client.messages
