@@ -130,7 +130,7 @@ app.get('/reset', (req, res) => {
 
 const disableNotify = () => {
     disableNotifications = true;
-    db.collection('state').doc('state').set({ disableNotifications: false }).then(val => {
+    db.collection('state').doc('state').set({ disableNotifications: true }).then(val => {
         if (debug && val)
             console.log(val);
     }).catch(err => console.log(err));
@@ -138,7 +138,7 @@ const disableNotify = () => {
 
 const enableNotify = () => {
     disableNotifications = false;
-    db.collection('state').doc('state').set({ disableNotifications: true }).then(val => {
+    db.collection('state').doc('state').set({ disableNotifications: false }).then(val => {
         if (debug && val)
             console.log(val);
     }).catch(err => console.log(err));
