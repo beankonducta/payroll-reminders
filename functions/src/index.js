@@ -176,12 +176,27 @@ const runNotification = () => {
                 .then(message => console.log(`Tipout reminder sent to ${sendToNum}`))
                 .catch(err => console.log(err));
         }
+        if(isBillPayDay(date)) {
+            client.messages
+                .create({
+                    body: `Time to pay bills! Please pay all rent / utilities in QBO. Reply 'done' when completed to silence reminders.`,
+                    from: sendFromNum,
+                    to: sendToNum
+                })
+                .then(message => console.log(`Tipout reminder sent to ${sendToNum}`))
+                .catch(err => console.log(err));
+        }
     }
 }
 
 const isMonday = (date) => {
     // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
     return date.day() === 1;
+}
+
+const isBillPayDay = (date) => {
+    // date.date() returns the day of the month
+    return date.date() === 26;
 }
 
 const isPayrollDay = (date) => {
@@ -243,5 +258,6 @@ const isWeekend = (date) => {
 exports.isHoliday = isHoliday;
 exports.isWeekend = isWeekend;
 exports.isMonday = isMonday;
+exports.isBillPayDay = isBillPayDay;
 exports.isPayrollDay = isPayrollDay;
 exports.app = functions.https.onRequest(app);
