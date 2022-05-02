@@ -14,6 +14,11 @@ test('gets todays date from datejs', () => {
     expect(dayjs().isValid()).toBeTruthy();
 });
 
+test('tests if isBillPayDay on 5/26/2022, which should be true', () => {
+    const date = dayjs(new Date(2021, 4, 26));
+    expoect(index.isBillPayDay(date)).toBeTruthy();
+});
+
 test('tests isMonday on 5/10/2021, which is a monday', () => {
     const date = dayjs(new Date(2021, 4, 10));
     expect(index.isMonday(date)).toBeTruthy();
