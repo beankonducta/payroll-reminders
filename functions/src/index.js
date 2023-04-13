@@ -1,4 +1,4 @@
-var dotenv = require('dotenv').config();
+var dotenv = require('dotenv').config({ path: require('find-config')('.env') });
 
 // Server stuff
 const express = require('express');
@@ -166,10 +166,20 @@ const runNotification = () => {
                 .then(message => console.log(`Payroll reminder sent to ${sendToNum}`))
                 .catch(err => console.log(err));
         }
-        if (isMonday(date)) {
+        // if (isMonday(date)) {
+        //     client.messages
+        //         .create({
+        //             body: `It's Monday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
+        //             from: sendFromNum,
+        //             to: sendToNum
+        //         })
+        //         .then(message => console.log(`Tipout reminder sent to ${sendToNum}`))
+        //         .catch(err => console.log(err));
+        // }
+        if (isFriday(date)) {
             client.messages
                 .create({
-                    body: `It's Monday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
+                    body: `It's Friday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
                     from: sendFromNum,
                     to: sendToNum
                 })
@@ -192,6 +202,11 @@ const runNotification = () => {
 const isMonday = (date) => {
     // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
     return date.day() === 1;
+}
+
+const isFriday = (date) => {
+    // date.day() returns 0-6 (Sun to Sat), making 1 = Monday
+    return date.day() === 5;
 }
 
 const isBillPayDay = (date) => {
@@ -220,7 +235,7 @@ const isPayrollDay = (date) => {
     while (validBusinessDays < 2) {
         if (isHoliday(payDay) || isWeekend(payDay)) {
             if (debug)
-                console.log('invalid day: ' + payDay.format())
+                console.log('invalid day, holiday or weekend: ' + payDay.format())
         } else {
             // Valid business day found, increase count
             validBusinessDays += 1;
@@ -258,6 +273,7 @@ const isWeekend = (date) => {
 exports.isHoliday = isHoliday;
 exports.isWeekend = isWeekend;
 exports.isMonday = isMonday;
+exports.isFriday = isFriday;
 exports.isBillPayDay = isBillPayDay;
 exports.isPayrollDay = isPayrollDay;
 exports.app = functions.https.onRequest(app);
