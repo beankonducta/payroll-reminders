@@ -166,26 +166,26 @@ const runNotification = () => {
                 .then(message => console.log(`Payroll reminder sent to ${sendToNum}`))
                 .catch(err => console.log(err));
         }
-        // if (isMonday(date)) {
-        //     client.messages
-        //         .create({
-        //             body: `It's Monday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
-        //             from: sendFromNum,
-        //             to: sendToNum
-        //         })
-        //         .then(message => console.log(`Tipout reminder sent to ${sendToNum}`))
-        //         .catch(err => console.log(err));
-        // }
-        if (isFriday(date)) {
+        if (isMonday(date)) {
             client.messages
                 .create({
-                    body: `It's Friday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
+                    body: `It's Monday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
                     from: sendFromNum,
                     to: sendToNum
                 })
                 .then(message => console.log(`Tipout reminder sent to ${sendToNum}`))
                 .catch(err => console.log(err));
         }
+        // if (isFriday(date)) {
+        //     client.messages
+        //         .create({
+        //             body: `It's Friday, DON'T FORGET TO PAYOUT TIPS! Reply 'done' when completed to silence reminders.`,
+        //             from: sendFromNum,
+        //             to: sendToNum
+        //         })
+        //         .then(message => console.log(`Tipout reminder sent to ${sendToNum}`))
+        //         .catch(err => console.log(err));
+        // }
         if(isBillPayDay(date)) {
             client.messages
                 .create({
